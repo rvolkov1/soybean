@@ -1,2 +1,8 @@
 *.nc
 noaa_ds/us_states
+
+.env
+*/.env
+*/weather_with_geo.csv
+
+*/__pycache__/
