@@ -42,20 +42,19 @@ async def export(
             c.geofips,
             c.name as county_name,
             c.state,
-            y.year,
+            cy.year,
             w.precip_mm_total,
             w.tavg_c,
             a.soybean_total_production,
             e.total_gdp
         FROM county_year cy
         JOIN county c ON cy.county_id = c.geofips
-        JOIN year y ON cy.year = y.year
         JOIN agricultural a ON cy.id = a.county_year_id
         JOIN economy e ON cy.id = e.county_year_id
         JOIN weather_stats w ON cy.id = w.county_year_id
         WHERE 
-            (%(start)s IS NULL OR y.year >= %(start)s)
-            AND (%(end)s IS NULL OR y.year <= %(end)s)
+            (%(start)s IS NULL OR cy.year >= %(start)s)
+            AND (%(end)s IS NULL OR cy.year <= %(end)s)
     """
 
     # Execute query using pandas
