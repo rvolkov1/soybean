@@ -21,10 +21,10 @@ async def export(
     # Completeness check: ~6 months * 30 days = 180 days (using 150 as safe lower bound) vs 365 days (using 330 as safe lower bound)
     if growing_season:
         weather_condition = "EXTRACT(MONTH FROM date) BETWEEN 5 AND 10"
-        min_days = 150
+        min_months = 5 # Expect 6 months (May-Oct). Threshold set to 5.
     else:
         weather_condition = "TRUE"
-        min_days = 330
+        min_months = 11 # Expect 12 months (Full Year). Threshold set to 11.
 
     query = f"""
         WITH weather_stats AS (
@@ -36,7 +36,7 @@ async def export(
             FROM weather
             WHERE {weather_condition}
             GROUP BY county_year_id
-            HAVING COUNT(*) >= {min_days}
+            HAVING COUNT(*) >= {min_months}
         )
         SELECT 
             c.geofips,
@@ -53,8 +53,8 @@ async def export(
         JOIN economy e ON cy.id = e.county_year_id
         JOIN weather_stats w ON cy.id = w.county_year_id
         WHERE 
-            (%(start)s IS NULL OR cy.year >= %(start)s)
-            AND (%(end)s IS NULL OR cy.year <= %(end)s)
+            (%(start)s IS NULL OR cy.year >= CAST(%(start)s AS INTEGER))
+            AND (%(end)s IS NULL OR cy.year <= CAST(%(end)s AS INTEGER))
     """
 
     # Execute query using pandas
