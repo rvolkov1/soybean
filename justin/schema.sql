@@ -1,18 +1,14 @@
 
 CREATE TABLE county (
-    id SERIAL PRIMARY KEY,
-    geofips VARCHAR(10),
-    name TEXT NOT NULL
-);
-
-CREATE TABLE year (
-    year INTEGER PRIMARY KEY
+    geofips VARCHAR(10) PRIMARY KEY,
+    name TEXT NOT NULL,
+    state TEXT NOT NULL
 );
 
 CREATE TABLE county_year (
     id SERIAL PRIMARY KEY,
-    county_id INTEGER REFERENCES county(id),
-    year INTEGER REFERENCES year(year),
+    county_id VARCHAR(10) REFERENCES county(geofips),
+    year INTEGER,
     UNIQUE(county_id, year)
 );
 
