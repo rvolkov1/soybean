@@ -53,8 +53,8 @@ async def export(
         JOIN economy e ON cy.id = e.county_year_id
         JOIN weather_stats w ON cy.id = w.county_year_id
         WHERE 
-            (%(start)s IS NULL OR cy.year >= CAST(%(start)s AS INTEGER))
-            AND (%(end)s IS NULL OR cy.year <= CAST(%(end)s AS INTEGER))
+            (CAST(%(start)s AS INTEGER) IS NULL OR cy.year >= CAST(%(start)s AS INTEGER))
+            AND (CAST(%(end)s AS INTEGER) IS NULL OR cy.year <= CAST(%(end)s AS INTEGER))
     """
 
     # Execute query using pandas
