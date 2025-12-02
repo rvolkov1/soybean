@@ -77,6 +77,6 @@ FROM county_year cy
 JOIN county c ON cy.county_id = c.geofips
 JOIN agricultural a ON cy.id = a.county_year_id
 JOIN economy e ON cy.id = e.county_year_id
-LEFT JOIN weather_full wf ON cy.id = wf.county_year_id
-LEFT JOIN weather_growing wg ON cy.id = wg.county_year_id;
+JOIN weather_full wf ON cy.id = wf.county_year_id
+JOIN weather_growing wg ON cy.id = wg.county_year_id;
 
