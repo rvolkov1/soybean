@@ -16,45 +16,29 @@ async def export(
 ):
     conn = psycopg.connect(os.getenv("DATABASE_URL"))
 
-    # Define weather filtering logic
-    # Growing season: May (5) to October (10)
+    # Select columns based on growing season flag
     # Completeness check: ~6 months * 30 days = 180 days (using 150 as safe lower bound) vs 365 days (using 330 as safe lower bound)
     if growing_season:
-        weather_condition = "EXTRACT(MONTH FROM date) BETWEEN 5 AND 10"
-        min_months = 5 # Expect 6 months (May-Oct). Threshold set to 5.
+        precip_col = "precip_growing"
+        tavg_col = "tavg_growing"
     else:
-        weather_condition = "TRUE"
-        min_months = 11 # Expect 12 months (Full Year). Threshold set to 11.
+        precip_col = "precip_full"
+        tavg_col = "tavg_full"
 
     query = f"""
-        WITH weather_stats AS (
-            SELECT 
-                county_year_id,
-                SUM(precip_mm) as precip_mm_total,
-                AVG(tavg_c) as tavg_c,
-                COUNT(*) as day_count
-            FROM weather
-            WHERE {weather_condition}
-            GROUP BY county_year_id
-            HAVING COUNT(*) >= {min_months}
-        )
         SELECT 
-            c.geofips,
-            c.name as county_name,
-            c.state,
-            cy.year,
-            w.precip_mm_total,
-            w.tavg_c,
-            a.soybean_total_production,
-            e.total_gdp
-        FROM county_year cy
-        JOIN county c ON cy.county_id = c.geofips
-        JOIN agricultural a ON cy.id = a.county_year_id
-        JOIN economy e ON cy.id = e.county_year_id
-        JOIN weather_stats w ON cy.id = w.county_year_id
+            geofips,
+            county_name,
+            state,
+            year,
+            {precip_col} as precip_mm_total,
+            {tavg_col} as tavg_c,
+            soybean_total_production,
+            total_gdp
+        FROM soybean_data_view
         WHERE 
-            (CAST(%(start)s AS INTEGER) IS NULL OR cy.year >= CAST(%(start)s AS INTEGER))
-            AND (CAST(%(end)s AS INTEGER) IS NULL OR cy.year <= CAST(%(end)s AS INTEGER))
+            (CAST(%(start)s AS INTEGER) IS NULL OR year >= CAST(%(start)s AS INTEGER))
+            AND (CAST(%(end)s AS INTEGER) IS NULL OR year <= CAST(%(end)s AS INTEGER))
     """
 
     # Execute query using pandas

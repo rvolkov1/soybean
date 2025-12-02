@@ -40,3 +40,43 @@ CREATE TABLE economy (
     UNIQUE(county_year_id)
 );
 
+CREATE OR REPLACE VIEW soybean_data_view AS
+WITH weather_full AS (
+    SELECT 
+        county_year_id,
+        SUM(precip_mm) as precip_mm_total,
+        AVG(tavg_c) as tavg_c,
+        COUNT(*) as day_count
+    FROM weather
+    GROUP BY county_year_id
+),
+weather_growing AS (
+    SELECT 
+        county_year_id,
+        SUM(precip_mm) as precip_mm_total,
+        AVG(tavg_c) as tavg_c,
+        COUNT(*) as day_count
+    FROM weather
+    WHERE EXTRACT(MONTH FROM date) BETWEEN 5 AND 9
+    GROUP BY county_year_id
+)
+SELECT 
+    c.geofips,
+    c.name as county_name,
+    c.state,
+    cy.year,
+    a.soybean_total_production,
+    e.total_gdp,
+    wf.precip_mm_total as precip_full,
+    wf.tavg_c as tavg_full,
+    wf.day_count as days_full,
+    wg.precip_mm_total as precip_growing,
+    wg.tavg_c as tavg_growing,
+    wg.day_count as days_growing
+FROM county_year cy
+JOIN county c ON cy.county_id = c.geofips
+JOIN agricultural a ON cy.id = a.county_year_id
+JOIN economy e ON cy.id = e.county_year_id
+LEFT JOIN weather_full wf ON cy.id = wf.county_year_id
+LEFT JOIN weather_growing wg ON cy.id = wg.county_year_id;
+
